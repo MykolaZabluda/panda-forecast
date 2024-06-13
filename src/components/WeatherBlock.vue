@@ -1,7 +1,9 @@
 <template>
   <div class="weather-block">
     <div class="weather-block-input">
-      <input v-model="searchCity" @keyup.enter="sendRequest" placeholder="Enter city name" />
+      <input v-model="searchCity"
+             @keyup.enter="sendRequest"
+             placeholder="Enter city name" />
     </div>
     <WeatherCards ref="weatherCards" :searchCity="searchCity" :initialLocation="initialLocation" />
     <WeatherGraph />
@@ -26,6 +28,7 @@ export default {
   methods: {
     sendRequest() {
       this.$refs.weatherCards.getCity();
+      this.searchCity = '';
     },
     getCurrentLocation() {
       if (navigator.geolocation) {

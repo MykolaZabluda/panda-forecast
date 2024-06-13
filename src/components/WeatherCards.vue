@@ -1,24 +1,26 @@
 <template>
   <div class="weather-cards">
     <p v-if="weatherData.length >= maxCards">You cannot add more than 5 city cards.</p>
-    <div v-else-if="searchCity">
-      <button @click="getCity">Send</button>
-    </div>
-    <div v-if="weatherData.length">
+    <div class="weather-cards-item" v-if="weatherData.length">
       <div class="card" v-for="(city, index) in weatherData" :key="index">
+        <button class="close-btn" @click="deleteCity(index)">✖</button>
         <div class="card-header">
           <h3>{{ city.name }}</h3>
           <p class="temp">{{ city.main.temp }}°C</p>
         </div>
         <div class="card-body">
-<!--          <img src="cloud_icon_url" alt="weather icon" class="weather-icon" />-->
+          <img :src="'https://openweathermap.org/img/wn/' + city.weather[0].icon + '@2x.png'"
+               alt="weather icon"
+               class="weather-icon" />
           <p class="description">{{ city.weather[0].description }}</p>
         </div>
         <div class="card-footer">
-          <button @click="deleteCity(index)">Delete</button>
-          <button @click="toggleFavorite(index)">
-            {{ city.isFavorite ? 'Unfavorite' : 'Favorite' }}
-          </button>
+          <input
+            class="star"
+            v-bind:class="city.isFavorite ? 'favorite' : 'unfavorite'"
+            type="checkbox"
+            @click="toggleFavorite(city)"
+          >
         </div>
       </div>
     </div>
@@ -47,42 +49,68 @@ export default {
     },
   },
   methods: {
-    async getCity() {
-      if (this.weatherData.length >= this.maxCards) return;
+    async getCityWeather(lat, lon) {
       try {
-        const geoResponse = await axios.get(`https://api.openweathermap.org/geo/1.0/direct?q=${this.searchCity}&limit=1&appid=${this.apiKey}`);
-        const { lat, lon } = geoResponse.data[0];
         const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${this.apiKey}`);
-        const weatherInfo = weatherResponse.data;
-        weatherInfo.isFavorite = false;
-        this.weatherData.push(weatherInfo);
+        weatherResponse.data.isFavorite = false;
+        return weatherResponse.data;
       } catch (error) {
         console.error(error);
       }
     },
-    async getCityByCoords(lat, lon) {
-      if (this.weatherData.length >= this.maxCards) return;
-      try {
-        const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${this.apiKey}`);
-        const weatherInfo = weatherResponse.data;
-        weatherInfo.isFavorite = false;
-        this.weatherData.push(weatherInfo);
-      } catch (error) {
-        console.error(error);
+    setWeatherData(lat, lon) {
+      this.getCityWeather(lat, lon).then(weather => {
+        this.weatherData.push(weather);
+        this.saveFavorites();
+      }).catch(error => console.error(error));
+    },
+    async getCity() {
+      if (this.weatherData.length >= this.maxCards) {
+        return;
       }
+
+      const geoResponse = await axios.get(`https://api.openweathermap.org/geo/1.0/direct?q=${this.searchCity}&limit=1&appid=${this.apiKey}`);
+      const { lat, lon } = geoResponse.data[0];
+      this.setWeatherData(lat, lon);
+    },
+    getCityByCoords(lat, lon) {
+      if (this.weatherData.length >= this.maxCards) {
+        return;
+      }
+
+      this.setWeatherData(lat, lon);
     },
     deleteCity(index) {
       this.weatherData.splice(index, 1);
+      this.saveFavorites();
     },
-    toggleFavorite(index) {
-      this.weatherData[index].isFavorite = !this.weatherData[index].isFavorite;
+    toggleFavorite(city) {
+      city.isFavorite = !city.isFavorite;
+      this.saveFavorites();
+    },
+    saveFavorites() {
+      const favoriteCities = this.weatherData.filter(city => city.isFavorite);
+      localStorage.setItem("favoriteCities", JSON.stringify(favoriteCities));
+    },
+    loadFavorites() {
+      const favoriteCities = JSON.parse(localStorage.getItem("favoriteCities")) || [];
+      favoriteCities.forEach(favoriteCity => {
+        const existingCity = this.weatherData.find(city => city.id === favoriteCity.id);
+
+        if (existingCity) {
+          existingCity.isFavorite = true;
+        } else {
+          this.weatherData.push(favoriteCity);
+        }
+      });
     },
   },
   mounted() {
     if (this.initialLocation) {
       this.getCityByCoords(this.initialLocation.lat, this.initialLocation.lon);
     }
-  }
+    this.loadFavorites();
+  },
 };
 </script>
 
@@ -92,63 +120,99 @@ export default {
   flex-direction: column;
   align-items: center;
 
-  .card {
-    background: #2c3e50;
-    border-radius: 10px;
-    padding: 16px;
-    margin: 8px;
-    color: #ecf0f1;
-    width: 200px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  &-item {
+    display: flex;
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .card {
+      background: #2c3e50;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 8px;
+      color: #ecf0f1;
+      width: 200px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
 
-      h3 {
-        margin: 0;
-        font-size: 18px;
-      }
-
-      .temp {
-        font-size: 24px;
-        font-weight: bold;
-      }
-    }
-
-    .card-body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 10px 0;
-
-      .weather-icon {
-        width: 50px;
-        height: 50px;
-      }
-
-      .description {
-        text-transform: capitalize;
-        margin-top: 5px;
-      }
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-
-      button {
+      .close-btn {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        padding: 5px 8px;
+        border-radius: 25px;
         background: #e74c3c;
         border: none;
         color: #fff;
-        padding: 5px 10px;
+        font-size: 16px;
         cursor: pointer;
-        border-radius: 5px;
+      }
 
-        &:nth-child(2) {
-          background: #3498db;
+      &-header {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        //align-items: center;
+
+        h3 {
+          margin: 0;
+          font-size: 32px;
+          font-weight: bold;
+        }
+
+        .temp {
+          font-size: 28px;
+          font-weight: bold;
+        }
+      }
+
+      &-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px 0;
+
+        .weather-icon {
+          width: 75px;
+          height: 75px;
+        }
+
+        .description {
+          text-transform: capitalize;
+          margin-top: 5px;
+        }
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 0;
+
+        //button {
+        //  background: #3498db;
+        //  border: none;
+        //  color: #fff;
+        //  padding: 5px 10px;
+        //  cursor: pointer;
+        //  border-radius: 5px;
+        //}
+
+        .star {
+          visibility: hidden;
+          font-size: 30px;
+          cursor: pointer;
+        }
+
+        .favorite:before {
+          //content: "\2605";
+          content: '\2b50';
+          position: absolute;
+          visibility: visible;
+        }
+
+        .unfavorite:before {
+          content: '\2606';
+          position: absolute;
+          visibility: visible;
         }
       }
     }

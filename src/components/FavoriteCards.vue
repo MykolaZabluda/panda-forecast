@@ -2,7 +2,7 @@
   <div class="weather-cards">
     <div class="weather-cards-item" v-if="favoriteWeatherData.length">
       <div class="card" v-for="(city, index) in favoriteWeatherData" :key="index">
-        <button class="close-btn" @click="removeFavorite(index)">✖</button>
+        <button class="close-btn" @click="showDeleteModal(index)">✖</button>
         <div class="card-header">
           <h3>{{ city.name }}</h3>
           <p class="temp">{{ city.main.temp }}°C</p>
@@ -14,22 +14,27 @@
       </div>
     </div>
     <p v-else>No favorite cities added yet.</p>
+    <DeleteConfirmationModal
+        :visible="showModal"
+        @close="closeModal"
+        @confirm="confirmDelete"
+    />
   </div>
 </template>
 
 <script>
+import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal.vue";
+
 export default {
+  components: {DeleteConfirmationModal},
   data() {
     return {
       favoriteWeatherData: [],
       maxFavorites: 5,
+      showModal: false,
     };
   },
   methods: {
-    removeFavorite(index) {
-      this.favoriteWeatherData.splice(index, 1);
-      this.saveFavorites();
-    },
     toggleFavorite(index) {
       this.favoriteWeatherData[index].isFavorite = !this.favoriteWeatherData[index].isFavorite;
       this.saveFavorites();
@@ -42,6 +47,21 @@ export default {
       if (favoriteCities) {
         this.favoriteWeatherData = favoriteCities;
       }
+    },
+    showDeleteModal(index) {
+      this.cardIndexToDelete = index;
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+      this.cardIndexToDelete = null;
+    },
+    confirmDelete() {
+      if (this.cardIndexToDelete !== null) {
+        this.favoriteWeatherData.splice(this.cardIndexToDelete, 1);
+        this.saveFavorites();
+      }
+      this.closeModal();
     },
   },
   mounted() {

@@ -2,11 +2,12 @@
   <div class="weather-block">
     <div class="weather-block-input">
       <input v-model="searchCity"
-             @keyup.enter="sendRequest"
-             placeholder="Enter city name" />
+        @keyup.enter="sendRequest"
+        placeholder="Enter city name"
+      />
     </div>
-    <WeatherCards ref="weatherCards" :searchCity="searchCity" :initialLocation="initialLocation" />
-    <WeatherGraph />
+    <WeatherCards ref="weatherCards" :searchCity="searchCity" :initialLocation="initialLocation" @update-graph="updateGraphData" />
+    <WeatherGraph :cityWeatherData="cityWeatherData" />
   </div>
 </template>
 
@@ -23,12 +24,13 @@ export default {
     return {
       searchCity: "",
       initialLocation: null,
+      cityWeatherData: null,
     };
   },
   methods: {
     sendRequest() {
       this.$refs.weatherCards.getCity();
-      this.searchCity = '';
+      this.searchCity = "";
     },
     getCurrentLocation() {
       if (navigator.geolocation) {
@@ -48,6 +50,9 @@ export default {
         console.error("Geolocation is not supported by this browser.");
       }
     },
+    updateGraphData(weatherData) {
+      this.cityWeatherData = weatherData;
+    },
   },
   mounted() {
     this.getCurrentLocation();
@@ -58,7 +63,7 @@ export default {
 <style scoped lang="scss">
 .weather-block {
   padding: 16px;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 
   &-input {

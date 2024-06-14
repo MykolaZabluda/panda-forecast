@@ -2,8 +2,8 @@
   <div class="weather-cards">
     <p v-if="weatherData.length >= maxCards">You cannot add more than 5 city cards.</p>
     <div class="weather-cards-item" v-if="weatherData.length">
-      <div class="card" v-for="(city, index) in weatherData" :key="index">
-        <button class="close-btn" @click="deleteCity(index)">✖</button>
+      <div class="card" v-for="(city, index) in weatherData" :key="index" @click="selectCity(city)">
+        <button class="close-btn" @click.stop="showDeleteModal(index)">✖</button>
         <div class="card-header">
           <h3>{{ city.name }}</h3>
           <p class="temp">{{ city.main.temp }}°C</p>
@@ -16,26 +16,37 @@
         </div>
         <div class="card-footer">
           <input
-            class="star"
-            v-bind:class="city.isFavorite ? 'favorite' : 'unfavorite'"
-            type="checkbox"
-            @click="toggleFavorite(city)"
+              class="star"
+              v-bind:class="city.isFavorite ? 'favorite' : 'unfavorite'"
+              type="checkbox"
+              @click.stop="toggleFavorite(city)"
           >
         </div>
       </div>
     </div>
+    <DeleteConfirmationModal
+        :visible="showModal"
+        @close="closeModal"
+        @confirm="confirmDelete"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal.vue";
 
 export default {
+  components: {
+    DeleteConfirmationModal
+  },
   data() {
     return {
       weatherData: [],
       apiKey: "9f2b2e8cd60541bbd9ad927b1a5cda93",
       maxCards: 5,
+      showModal: false,
+      cardIndexToDelete: null,
     };
   },
   props: {
@@ -62,6 +73,7 @@ export default {
       this.getCityWeather(lat, lon).then(weather => {
         this.weatherData.push(weather);
         this.saveFavorites();
+        this.$emit("update-graph", weather);
       }).catch(error => console.error(error));
     },
     async getCity() {
@@ -80,9 +92,20 @@ export default {
 
       this.setWeatherData(lat, lon);
     },
-    deleteCity(index) {
-      this.weatherData.splice(index, 1);
-      this.saveFavorites();
+    showDeleteModal(index) {
+      this.cardIndexToDelete = index;
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+      this.cardIndexToDelete = null;
+    },
+    confirmDelete() {
+      if (this.cardIndexToDelete !== null) {
+        this.weatherData.splice(this.cardIndexToDelete, 1);
+        this.saveFavorites();
+      }
+      this.closeModal();
     },
     toggleFavorite(city) {
       city.isFavorite = !city.isFavorite;
@@ -104,6 +127,9 @@ export default {
         }
       });
     },
+    selectCity(city) {
+      this.$emit("update-graph", city);
+    }
   },
   mounted() {
     if (this.initialLocation) {

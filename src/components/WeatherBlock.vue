@@ -64,6 +64,7 @@ export default {
 .weather-block {
   padding: 16px;
   max-width: 1200px;
+  min-width: 360px;
   margin: 0 auto;
 
   &-input {

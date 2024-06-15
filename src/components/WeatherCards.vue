@@ -196,7 +196,6 @@ export default {
         display: flex;
         flex-direction: column;
         text-align: left;
-        //align-items: center;
 
         h3 {
           margin: 0;
@@ -253,6 +252,9 @@ export default {
           content: '\2b50';
           position: absolute;
           visibility: visible;
+          font-size: 22px;
+          padding-top: 7px;
+          padding-left: 2px;
         }
 
         .unfavorite:before {

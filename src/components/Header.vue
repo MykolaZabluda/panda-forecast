@@ -1,11 +1,13 @@
 <template>
   <header class="header">
-    <p class="header-title">Panda Forecast</p>
+    <div class="header-wrapper">
+      <p class="header-title">Panda Forecast</p>
+      <nav>
+        <router-link class="links" to="/">All</router-link> |
+        <router-link class="links" to="/favorite">Favorite</router-link>
+      </nav>
+    </div>
   </header>
-  <nav>
-    <router-link class="links" to="/">All</router-link> |
-    <router-link class="links" to="/favorite">Favorite</router-link>
-  </nav>
 </template>
 
 <script setup>
@@ -27,6 +29,7 @@
 }
 
 nav {
+  padding: 30px;
   background: #2c3e50;
   color: #fff;
 

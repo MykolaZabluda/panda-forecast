@@ -5,10 +5,29 @@
 </template>
 
 <script>
-import { Chart, LineElement, LineController, CategoryScale, LinearScale, PointElement } from "chart.js";
+import {
+  Chart,
+  LineElement,
+  LineController,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+} from "chart.js";
 import axios from "axios";
 
-Chart.register(LineElement, LineController, CategoryScale, LinearScale, PointElement);
+Chart.register(
+    LineElement,
+    LineController,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 export default {
   props: {
@@ -54,7 +73,7 @@ export default {
         data: {
           labels: labels,
           datasets: [{
-            label: "Hourly Temperature (°C)",
+            label: `Hourly Temperature in ${this.cityWeatherData.name} (°C)`,
             data: temperatures,
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             borderColor: "rgba(75, 192, 192, 1)",
@@ -62,11 +81,29 @@ export default {
           }],
         },
         options: {
+          responsive: true,
           scales: {
             y: {
               beginAtZero: true,
-            },
+              ticks: {
+                callback: (value) => value + '°C'
+              }
+            }
           },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                text: this.cityWeatherData.name,
+                color: "rgba(75, 192, 192, 1)"
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `Temperature (°C): ${context.parsed.y.toFixed(0)}`
+              }
+            }
+          }
         },
       });
     },

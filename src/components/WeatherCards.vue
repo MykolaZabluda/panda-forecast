@@ -6,7 +6,7 @@
         <button class="close-btn" @click.stop="showDeleteModal(index)">✖</button>
         <div class="card-header">
           <h3>{{ city.name }}</h3>
-          <p class="temp">{{ city.main.temp }}°C</p>
+          <p class="temp">{{ city.main.temp.toFixed(0) }}°C</p>
         </div>
         <div class="card-body">
           <img :src="'https://openweathermap.org/img/wn/' + city.weather[0].icon + '@2x.png'"
@@ -21,6 +21,7 @@
               type="checkbox"
               @click.stop="toggleFavorite(city)"
           >
+          <button @click="openModal(city)">Open Modal</button>
         </div>
       </div>
     </div>
@@ -29,16 +30,23 @@
         @close="closeModal"
         @confirm="confirmDelete"
     />
+    <CityInfoModal
+        :visible="modalVisible"
+        :city="selectedCity"
+        @close="closeExtendedModal"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal.vue";
+import CityInfoModal from "@/components/modals/CityInfoModal.vue";
 
 export default {
   components: {
-    DeleteConfirmationModal
+    DeleteConfirmationModal,
+    CityInfoModal,
   },
   data() {
     return {
@@ -47,6 +55,8 @@ export default {
       maxCards: 5,
       showModal: false,
       cardIndexToDelete: null,
+      modalVisible: false,
+      selectedCity: null
     };
   },
   props: {
@@ -63,6 +73,7 @@ export default {
     async getCityWeather(lat, lon) {
       try {
         const weatherResponse = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${this.apiKey}`);
+        weatherResponse.data.main.temp = parseFloat(weatherResponse.data.main.temp.toFixed(1));
         weatherResponse.data.isFavorite = false;
         return weatherResponse.data;
       } catch (error) {
@@ -129,6 +140,14 @@ export default {
     },
     selectCity(city) {
       this.$emit("update-graph", city);
+    },
+    openModal(city) {
+      this.selectedCity = city;
+      this.modalVisible = true;
+    },
+    closeExtendedModal() {
+      this.modalVisible = false;
+      this.selectedCity = null;
     }
   },
   mounted() {
@@ -211,16 +230,17 @@ export default {
       .card-footer {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 20px 0;
 
-        //button {
-        //  background: #3498db;
-        //  border: none;
-        //  color: #fff;
-        //  padding: 5px 10px;
-        //  cursor: pointer;
-        //  border-radius: 5px;
-        //}
+        button {
+          background: #3498db;
+          padding: 15px 10px;
+          border: none;
+          border-radius: 15px;
+          font-size: 14px;
+          font-weight: 600;
+        }
 
         .star {
           visibility: hidden;

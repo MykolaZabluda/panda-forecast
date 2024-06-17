@@ -15,25 +15,45 @@
           <p class="description">{{ city.weather[0].description }}</p>
         </div>
         <div class="card-footer">
-          <input
-              class="star"
-              v-bind:class="city.isFavorite ? 'favorite' : 'unfavorite'"
-              type="checkbox"
-              @click.stop="toggleFavorite(city)"
-          >
+          <button class="star-btn" @click.stop="toggleFavorite(city)">
+            <svg
+              v-if="city.isFavorite"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="yellow"
+              class="star-icon"
+            >
+              <path d="M12 2.5l3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 18.27l-6.18 3.25 1.18-6.88-5-4.87 6.91-1L12 2.5z" />
+            </svg>
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              class="star-icon"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 2.5l3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 18.27l-6.18 3.25 1.18-6.88-5-4.87 6.91-1L12 2.5z"
+              />
+            </svg>
+          </button>
           <button @click="openModal(city)">Open Modal</button>
         </div>
       </div>
     </div>
     <DeleteConfirmationModal
-        :visible="showModal"
-        @close="closeModal"
-        @confirm="confirmDelete"
+      :visible="showModal"
+      @close="closeModal"
+      @confirm="confirmDelete"
     />
     <CityInfoModal
-        :visible="modalVisible"
-        :city="selectedCity"
-        @close="closeExtendedModal"
+      :visible="modalVisible"
+      :city="selectedCity"
+      @close="closeExtendedModal"
     />
   </div>
 </template>
@@ -234,33 +254,26 @@ export default {
 
         button {
           background: #3498db;
-          padding: 15px 10px;
+          padding: 10px 5px;
           border: none;
           border-radius: 15px;
           font-size: 14px;
           font-weight: 600;
         }
 
-        .star {
-          visibility: hidden;
-          font-size: 30px;
+        .star-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
           cursor: pointer;
-        }
+          padding: 0;
 
-        .favorite:before {
-          //content: "\2605";
-          content: '\2b50';
-          position: absolute;
-          visibility: visible;
-          font-size: 22px;
-          padding-top: 7px;
-          padding-left: 2px;
-        }
-
-        .unfavorite:before {
-          content: '\2606';
-          position: absolute;
-          visibility: visible;
+          .star-icon {
+            width: 33px;
+            height: 33px;
+          }
         }
       }
     }
